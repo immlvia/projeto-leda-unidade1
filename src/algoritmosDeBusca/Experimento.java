@@ -10,33 +10,20 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
-/**
- * Experimento de busca (vetor ordenado, alvo ausente = -1).
- *
- * Ajustes em relacao a versao anterior:
- *  - Tamanhos do enunciado: 50.000, 150.000 e 500.000.
- *  - Cada "execucao" mede REPETICOES buscas seguidas e divide pelo total,
- *    tirando o tempo da faixa de ruido do System.nanoTime().
- *  - 25 execucoes, descartando as 5 primeiras (regra do enunciado), alem de
- *    RODADAS_AQUECIMENTO_EXTRA rodadas de aquecimento para o JIT estabilizar.
- *  - Ordem dos algoritmos embaralhada a cada tamanho.
- *  - Mediana reportada junto com media, desvio padrao, minimo e maximo.
- *  - A busca roda numa thread com pilha grande: nao precisa mais de -Xss.
- *  - Sem boxing (interface propria em vez de BiFunction<int[], Integer, Integer>).
- */
+// Experimento de busca (vetor ordenado, alvo ausente = -1).
+
 public class Experimento {
 
     private static final int[] TAMANHOS = {10_000, 50_000, 100_000};
     private static final int TOTAL_EXECUCOES = 25;
     private static final int WARMUP_EXECUCOES = 5;
     private static final int RODADAS_AQUECIMENTO_EXTRA = 20;
-    private static final int ELEMENTO_BUSCA = -1; // Ausente, conforme enunciado
+    private static final int ELEMENTO_BUSCA = -1; // Ausente
     private static final int VALOR_MIN = 1;
     private static final int VALOR_MAX = 100_000;
     private static final long SEED = 42L;
     private static final long TAMANHO_PILHA = 512L * 1024 * 1024;
 
-    // Evita que o JIT elimine as chamadas por nao usar o resultado
     private static volatile long sorvedouro;
 
     private interface Busca {
@@ -46,7 +33,7 @@ public class Experimento {
     private static class Algoritmo {
         final String nome;
         final Busca busca;
-        final int repeticoes; // buscas por execucao medida
+        final int repeticoes; 
 
         Algoritmo(String nome, Busca busca, int repeticoes) {
             this.nome = nome;
@@ -77,8 +64,7 @@ public class Experimento {
                 System.out.println("Preparando vetor ordenado de tamanho: " + tamanho + "...");
                 int[] vetorOrdenado = gerarVetorOrdenado(tamanho, random);
 
-                // Linear: poucas repeticoes (cada busca ja custa dezenas/centenas de microssegundos)
-                // Binaria: muitas repeticoes (cada busca custa ~1 microssegundo)
+                
                 List<Algoritmo> algoritmos = new ArrayList<>();
                 algoritmos.add(new Algoritmo("BuscaLinearIterativa", AlgoritmosBusca::buscaLinearIterativa, 200));
                 algoritmos.add(new Algoritmo("BuscaLinearRecursiva", AlgoritmosBusca::buscaLinearRecursiva, 200));
@@ -86,7 +72,7 @@ public class Experimento {
                 algoritmos.add(new Algoritmo("BuscaBinariaIterativa", AlgoritmosBusca::buscaBinariaIterativa, 200_000));
                 algoritmos.add(new Algoritmo("BuscaBinariaRecursiva", AlgoritmosBusca::buscaBinariaRecursiva, 200_000));
 
-                // Ordem diferente a cada tamanho, para nao favorecer sempre o mesmo algoritmo
+                
                 Collections.shuffle(algoritmos, random);
 
                 for (Algoritmo alg : algoritmos) {
@@ -165,7 +151,6 @@ public class Experimento {
         }
     }
 
-    /** Executa 'repeticoes' buscas e devolve o tempo medio por busca, em ns. */
     private static double rodada(Algoritmo alg, int[] vetor) {
         int reps = alg.repeticoes;
         long soma = 0;
@@ -176,7 +161,7 @@ public class Experimento {
         }
         long fim = System.nanoTime();
 
-        // Verificacao de correcao fora da medicao: todas as buscas devem devolver -1
+        // Verificacao de correcao fora da medicao
         if (soma != -(long) reps) {
             throw new IllegalStateException(
                     "Erro: o elemento -1 nao deveria ser encontrado em " + alg.nome);

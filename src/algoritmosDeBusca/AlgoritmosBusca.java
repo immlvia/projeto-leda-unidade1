@@ -12,7 +12,6 @@ public class AlgoritmosBusca {
     }
 
     // 2. Busca Linear Recursiva - O(n)
-    // Obs.: Requer flag -Xss64m na JVM para não dar StackOverflowError em vetores grandes
     public static int buscaLinearRecursiva(int[] arr, int target) {
         return buscaLinearRecursivaHelper(arr, target, 0);
     }
